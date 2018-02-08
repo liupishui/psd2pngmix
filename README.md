@@ -6,7 +6,7 @@ export psd as png
 
 node version:8.9.3 (images项目需要在8.9.3下运行)
 
-#psd2pngmix
+# psd2pngmix function
 
 psd2pngmix(psdfile)
 

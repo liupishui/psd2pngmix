@@ -2,7 +2,7 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-08 09:31:33
+* @Last Modified time: 2018-02-08 13:25:23
 */
 var fs = require('fs');
 var path = require('path');
@@ -10,18 +10,19 @@ var PSD = require('psd');
 
 var images = require("images");
 
-var scanTree = function (Layer) {
-    if (Layer.type == 'group' && Layer.visible) {
-        for(let layerItem of Layer.children) {
-            scanTree(layerItem);
+function psd2pngmix(psdfile,cb){
+    var scanTree = function (Layer) {
+        if (Layer.type == 'group' && Layer.visible) {
+            for(let layerItem of Layer.children) {
+                scanTree(layerItem);
+            }
         }
+        if (Layer.name.indexOf('.psd') != '-1' && Layer.visible) {
+            replaceLayers.push(Layer);
+            replaceLayersRecord.push(Layer);
+        };
     }
-    if (Layer.name.indexOf('.psd') != '-1' && Layer.visible) {
-        replaceLayers.push(Layer);
-        replaceLayersRecord.push(Layer);
-    };
-}
-function psd2pngmix(psdfile){
+
     var replaceLayers = [];
     var replaceLayersRecord = [];
     var psd = PSD.fromFile(psdfile);
@@ -74,7 +75,7 @@ function psd2pngmix(psdfile){
                     }
                 };
                 imageCurr.save(destPath);
-                console.log('translate done!');
+                cb();
             });
         });
 

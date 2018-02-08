@@ -7,6 +7,10 @@
     "images": "git+https://github.com/zhangyuanwei/node-images.git",
     "psd": "^3.2.0"
   },
+  "repository": {
+        "type": "git",
+        "url": "https://github.com/liupishui/psd2pngmix.git"
+    },
   "devDependencies": {
   },
   "scripts": {

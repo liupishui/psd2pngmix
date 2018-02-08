@@ -2,13 +2,37 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-08 13:25:23
+* @Last Modified time: 2018-02-08 14:08:24
 */
 var fs = require('fs');
 var path = require('path');
 var PSD = require('psd');
 
 var images = require("images");
+
+var getFiles=function(filePath){
+    var files=[];
+    var getFilesLoop=function(filePath){
+        var filesCurrent=fs.readdirSync(filePath);
+        for(let i=0;i<filesCurrent.length;i++){
+            var fileStatCurrent={};
+            fileStatCurrent.path=path.join(filePath,filesCurrent[i]);
+            try{
+                fileStatCurrent.stats=fs.statSync(fileStatCurrent.path);
+                files.push(fileStatCurrent);
+                if(fileStatCurrent.stats.isDirectory()){
+                    if(fileStatCurrent.path.indexOf('.asar')!=(fileStatCurrent.path.length-5)){//.asar做为文件处理
+                        getFilesLoop(fileStatCurrent.path);
+                    }
+                }
+            }catch(e){
+                //console.log(e)
+            }
+        }
+    }
+    getFilesLoop(filePath);
+    return files;
+}
 
 function psd2pngmix(psdfile,cb){
     var scanTree = function (Layer) {
@@ -22,7 +46,6 @@ function psd2pngmix(psdfile,cb){
             replaceLayersRecord.push(Layer);
         };
     }
-
     var replaceLayers = [];
     var replaceLayersRecord = [];
     var psd = PSD.fromFile(psdfile);
@@ -85,8 +108,25 @@ function psd2pngmix(psdfile,cb){
         // fs.writeFile('4.psd',psdTree.children()[0].layer.file.data,function(e){console.log(e)});
     };
 }
-
-module.exports = {psd2pngmix:psd2pngmix}
+function psd2pngmixauto(path,cbauto){
+    var allFile=[];
+    var pathInfo=fs.statSync(path);
+    if(pathInfo.isDirectory()){
+        allFile = getFiles(path);
+    }else{
+        allFile.push(path);
+    }
+    var parseAllFile=function(arr,cbauto){
+        if(arr.length==0){
+            cbauto();
+        }else{
+            var fileCurr=arr.splice(-1)[0];
+            psd2pngmix(fileCurr,function(){parseAllFile(arr,cbauto)});
+        }
+    }
+    parseAllFile(allFile,cbauto);
+};
+module.exports = {psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
 
 
 // images("input.png")                     //Load image from file
@@ -98,4 +138,6 @@ module.exports = {psd2pngmix:psd2pngmix}
 //     .save("output.png", {               //Save the image to a file, with the quality of 50
 //         quality: 50                    //保存图片到文件,图片质量为50
 //     });
+
+
 

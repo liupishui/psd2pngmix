@@ -2,7 +2,7 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-09 14:11:08
+* @Last Modified time: 2018-02-09 14:22:43
 */
 var fs = require('fs');
 var path = require('path');
@@ -33,8 +33,7 @@ var getFiles=function(filePath){
     getFilesLoop(filePath);
     return files;
 }
-function scanTree(Layer,processing){
-    console.log(Layer,processing);
+function scanTree(psdfile,processing){
     var scanTreeOrg=function(Layer,processing){
         if (Layer.type == 'group' && Layer.visible) {
             for(let layerItem of Layer.children) {
@@ -45,7 +44,13 @@ function scanTree(Layer,processing){
             processing(Layer);
         };
     }
-    scanTreeOrg(Layer,processing);
+    var psd = PSD.fromFile(psdfile);
+    if (psd.parse()) {
+        var psdTreeExport = psd.tree().export();
+        for(let layer of psdTreeExport.children) {
+            scanTreeOrg(layer,processing);
+        }
+    }
 }
 function psd2pngmix(psdfile,cb){
     var psdfile=psdfile.path;
@@ -69,15 +74,12 @@ function psd2pngmix(psdfile,cb){
     console.log(psdfile);
     var psd = PSD.fromFile(psdfile);
     if (psd.parse()) {
-        var psdTreeExport = psd.tree().export();
-        for(let layer of psdTreeExport.children) {
-            scanTree(layer,function(Layer){
-                if(Layer.name.indexOf('.psd') != '-1'){
-                    replaceLayers.push(Layer);
-                    replaceLayersRecord.push(Layer);
-                }
-            })
-        }
+        scanTree(psdfile,function(Layer){
+            if(Layer.name.indexOf('.psd') != '-1'){
+                replaceLayers.push(Layer);
+                replaceLayersRecord.push(Layer);
+            }
+        })
         var destPath = path.join(path.dirname(psdfile), path.basename(psdfile, '.psd') + '.png');
         psd.image.saveAsPng(destPath).then(function () {
 
@@ -156,7 +158,7 @@ function psd2pngmixauto(path,cbauto){
         console.log('没有该文件');
     }
 };
-module.exports = {psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
+module.exports = {scanTree:scanTree,psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
 
 
 // images("input.png")                     //Load image from file

@@ -2,7 +2,7 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-09 09:27:43
+* @Last Modified time: 2018-02-09 09:34:09
 */
 var fs = require('fs');
 var path = require('path');
@@ -71,7 +71,7 @@ function psd2pngmix(psdfile,cb){
                 } else {
                     var layersCurr = layers.splice(-1)[0];
                     var layersCurrPath = path.join(path.dirname(psdfile), layersCurr.name);
-                    console.log(layersCurrPath);
+//                    console.log(layersCurrPath);
                     if (!resolveReady.some(function (val) { return val == layersCurrPath })) {
                         if (fs.existsSync(layersCurrPath)) {
                             var psdCurr = PSD.fromFile(layersCurrPath);

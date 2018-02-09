@@ -2,7 +2,7 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-09 09:34:09
+* @Last Modified time: 2018-02-09 09:36:25
 */
 var fs = require('fs');
 var path = require('path');
@@ -76,7 +76,7 @@ function psd2pngmix(psdfile,cb){
                         if (fs.existsSync(layersCurrPath)) {
                             var psdCurr = PSD.fromFile(layersCurrPath);
                             if(psdCurr.parse()){
-                                psdCurr.tree()._children[0].saveAsPng(path.join(path.dirname(layersCurrPath), path.basename(layersCurrPath, '.psd') + '3.png'));
+                                //psdCurr.tree()._children[0].saveAsPng(path.join(path.dirname(layersCurrPath), path.basename(layersCurrPath, '.psd') + '3.png'));
                                 psdCurr.image.saveAsPng(path.join(path.dirname(layersCurrPath), path.basename(layersCurrPath, '.psd') + '.png')).then(function () {
                                     replaceLayersToPng(layers, callback);
                                 });
@@ -150,4 +150,5 @@ module.exports = {psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
 //     .save("output.png", {               //Save the image to a file, with the quality of 50
 //         quality: 50                    //保存图片到文件,图片质量为50
 //     });
+
 

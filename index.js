@@ -2,7 +2,7 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-08 14:08:24
+* @Last Modified time: 2018-02-09 09:27:43
 */
 var fs = require('fs');
 var path = require('path');
@@ -35,6 +35,11 @@ var getFiles=function(filePath){
 }
 
 function psd2pngmix(psdfile,cb){
+    var psdfile=psdfile.path;
+    if(psdfile.indexOf('.psd') == -1){
+        cb()
+        return;
+    }
     var scanTree = function (Layer) {
         if (Layer.type == 'group' && Layer.visible) {
             for(let layerItem of Layer.children) {
@@ -48,6 +53,7 @@ function psd2pngmix(psdfile,cb){
     }
     var replaceLayers = [];
     var replaceLayersRecord = [];
+    console.log(psdfile);
     var psd = PSD.fromFile(psdfile);
     if (psd.parse()) {
         var psdTreeExport = psd.tree().export();
@@ -65,9 +71,10 @@ function psd2pngmix(psdfile,cb){
                 } else {
                     var layersCurr = layers.splice(-1)[0];
                     var layersCurrPath = path.join(path.dirname(psdfile), layersCurr.name);
+                    console.log(layersCurrPath);
                     if (!resolveReady.some(function (val) { return val == layersCurrPath })) {
                         if (fs.existsSync(layersCurrPath)) {
-                            var psdCurr = PSD.fromFile(layersCurr.name);
+                            var psdCurr = PSD.fromFile(layersCurrPath);
                             if(psdCurr.parse()){
                                 psdCurr.tree()._children[0].saveAsPng(path.join(path.dirname(layersCurrPath), path.basename(layersCurrPath, '.psd') + '3.png'));
                                 psdCurr.image.saveAsPng(path.join(path.dirname(layersCurrPath), path.basename(layersCurrPath, '.psd') + '.png')).then(function () {
@@ -110,21 +117,26 @@ function psd2pngmix(psdfile,cb){
 }
 function psd2pngmixauto(path,cbauto){
     var allFile=[];
-    var pathInfo=fs.statSync(path);
-    if(pathInfo.isDirectory()){
-        allFile = getFiles(path);
-    }else{
-        allFile.push(path);
-    }
-    var parseAllFile=function(arr,cbauto){
-        if(arr.length==0){
-            cbauto();
+    if(fs.existsSync(path)){
+        var pathInfo=fs.statSync(path);
+        if(pathInfo.isDirectory()){
+            allFile = getFiles(path);
         }else{
-            var fileCurr=arr.splice(-1)[0];
-            psd2pngmix(fileCurr,function(){parseAllFile(arr,cbauto)});
+            allFile.push({path:path});
         }
+        var parseAllFile=function(arr,cbauto){
+            if(arr.length==0){
+                cbauto();
+            }else{
+                var fileCurr=arr.splice(-1)[0];
+                psd2pngmix(fileCurr,function(){parseAllFile(arr,cbauto)});
+            }
+        }
+        parseAllFile(allFile,cbauto);
+    }else{
+        cbauto();
+        console.log('没有该文件');
     }
-    parseAllFile(allFile,cbauto);
 };
 module.exports = {psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
 
@@ -138,6 +150,4 @@ module.exports = {psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
 //     .save("output.png", {               //Save the image to a file, with the quality of 50
 //         quality: 50                    //保存图片到文件,图片质量为50
 //     });
-
-
 

@@ -2,7 +2,7 @@
 * @Author: anchen
 * @Date:   2018-02-07 19:46:55
 * @Last Modified by:   liups
-* @Last Modified time: 2018-02-09 09:36:25
+* @Last Modified time: 2018-02-09 14:11:08
 */
 var fs = require('fs');
 var path = require('path');
@@ -33,24 +33,37 @@ var getFiles=function(filePath){
     getFilesLoop(filePath);
     return files;
 }
-
+function scanTree(Layer,processing){
+    console.log(Layer,processing);
+    var scanTreeOrg=function(Layer,processing){
+        if (Layer.type == 'group' && Layer.visible) {
+            for(let layerItem of Layer.children) {
+                scanTreeOrg(layerItem,processing);
+            }
+        }
+        if(Layer.type == 'layer' && Layer.visible){
+            processing(Layer);
+        };
+    }
+    scanTreeOrg(Layer,processing);
+}
 function psd2pngmix(psdfile,cb){
     var psdfile=psdfile.path;
     if(psdfile.indexOf('.psd') == -1){
         cb()
         return;
     }
-    var scanTree = function (Layer) {
-        if (Layer.type == 'group' && Layer.visible) {
-            for(let layerItem of Layer.children) {
-                scanTree(layerItem);
-            }
-        }
-        if (Layer.name.indexOf('.psd') != '-1' && Layer.visible) {
-            replaceLayers.push(Layer);
-            replaceLayersRecord.push(Layer);
-        };
-    }
+    // var scanTree = function (Layer) {
+    //     if (Layer.type == 'group' && Layer.visible) {
+    //         for(let layerItem of Layer.children) {
+    //             scanTree(layerItem);
+    //         }
+    //     }
+    //     if (Layer.name.indexOf('.psd') != '-1' && Layer.visible) {
+    //         replaceLayers.push(Layer);
+    //         replaceLayersRecord.push(Layer);
+    //     };
+    // }
     var replaceLayers = [];
     var replaceLayersRecord = [];
     console.log(psdfile);
@@ -58,7 +71,12 @@ function psd2pngmix(psdfile,cb){
     if (psd.parse()) {
         var psdTreeExport = psd.tree().export();
         for(let layer of psdTreeExport.children) {
-            scanTree(layer);
+            scanTree(layer,function(Layer){
+                if(Layer.name.indexOf('.psd') != '-1'){
+                    replaceLayers.push(Layer);
+                    replaceLayersRecord.push(Layer);
+                }
+            })
         }
         var destPath = path.join(path.dirname(psdfile), path.basename(psdfile, '.psd') + '.png');
         psd.image.saveAsPng(destPath).then(function () {
@@ -150,5 +168,4 @@ module.exports = {psd2pngmix:psd2pngmix,psd2pngmixauto:psd2pngmixauto}
 //     .save("output.png", {               //Save the image to a file, with the quality of 50
 //         quality: 50                    //保存图片到文件,图片质量为50
 //     });
-
 
